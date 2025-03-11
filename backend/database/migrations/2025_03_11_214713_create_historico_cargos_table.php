@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('historico_cargos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pessoa_id')->constrained('pessoas')->onDelete('cascade');
+        $table->foreignId('pessoa_id')->constrained('pessoas')->onDelete('cascade');
         $table->foreignId('cargo_id')->constrained('cargos')->onDelete('cascade');
         $table->date('data_inicio');
         $table->date('data_fim')->nullable();
-            $table->timestamps();
+        $table->timestamps();
         });
     }
 

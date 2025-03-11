@@ -9,5 +9,9 @@ class Pessoa extends Model
 {
     use HasFactory;
     protected $fillable = ['nome', 'email'];
+    // Relacionamento com HistoricoCargo
+    public function historicoCargos()
+    {
+        return $this->hasMany(HistoricoCargo::class);
+    }
 }
-
