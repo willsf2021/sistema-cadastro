@@ -32,23 +32,21 @@ class CargoController extends Controller
         return response()->json($cargo);
     }
 
-    // Atualiza o cargo
+    
     public function update(Request $request, Cargo $cargo)
     {
-        // Validação simples
         $request->validate([
             'nome_cargo' => 'required|string|max:255',
         ]);
 
-        // Atualiza o cargo
         $cargo->update($request->all());
-        return response()->json($cargo);  // Retorna o cargo atualizado
+        return response()->json($cargo);  
     }
 
-    // Deleta o cargo
+    
     public function destroy(Cargo $cargo)
     {
         $cargo->delete();
-        return response()->json(['message' => 'Cargo deletado com sucesso']);  // Mensagem de sucesso
+        return response()->json(['message' => 'Cargo deletado com sucesso']);
     }
 }
