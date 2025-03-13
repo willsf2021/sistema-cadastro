@@ -24,7 +24,7 @@
           <div>
             <strong>{{ pessoa.nome }}</strong>
             <div class="text-muted"><strong>Email: </strong>{{ pessoa.email }}</div>
-            <div class="text-muted"><strong>Cargo: </strong>{{ "" }}</div>
+            <div class="text-muted"><strong>Último cargo: </strong>{{ "" }}</div>
           </div>
           <div class="pessoa-actions mt-3 mt-md-0">
             <i class="bi bi-eye detalhes-icon" :style="{ backgroundColor: '#3F861E' }"></i>
@@ -54,7 +54,6 @@
           </li>
         </ul>
       </nav>
-
     </div>
 
     <!-- Modal de Gerenciamento -->
@@ -104,7 +103,14 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p>Deseja realmente excluir a pessoa "{{ pessoaSelecionada?.nome }}"?</p>
+            <p v-if="!pessoaSelecionada?.cargos?.length">Deseja realmente excluir a pessoa "{{ pessoaSelecionada?.nome }}"?</p>
+            <div v-else>
+              <p>Esta pessoa possui vínculo com o(s) cargo(s):</p>
+              <ul>
+                <li v-for="cargo in pessoaSelecionada.cargos" :key="cargo.id">{{ cargo.nome }}</li>
+              </ul>
+              <p>Deseja realmente excluir?</p>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -115,7 +121,6 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { usePessoaStore } from '@/stores/pessoaStore';
 import { onMounted, ref, computed } from 'vue';
@@ -184,6 +189,18 @@ const abrirModalExclusao = (pessoa) => {
 
 const confirmarExclusao = async () => {
   if (pessoaSelecionada.value) {
+    // Verifica se a pessoa possui vínculos (cargos)
+    if (pessoaSelecionada.value.cargos && pessoaSelecionada.value.cargos.length > 0) {
+      const confirmacao = confirm(
+        `Esta pessoa possui vínculo com o(s) cargo(s): ${pessoaSelecionada.value.cargos.map((cargo) => cargo.nome).join(', ')}. Deseja realmente excluir?`
+      );
+
+      if (!confirmacao) {
+        return; // Cancela a exclusão se o usuário não confirmar
+      }
+    }
+
+    // Prossegue com a exclusão
     await pessoaStore.deletePessoa(pessoaSelecionada.value.id);
     await pessoaStore.fetchPessoas();
     pessoas.value = pessoaStore.pessoas;
@@ -280,9 +297,7 @@ const cancelarEdicao = () => {
 .footer-fixo {
   position: sticky;
   bottom: 0;
- 
   padding: 16px;
-  
 }
 
 /* Responsividade */
@@ -290,7 +305,7 @@ const cancelarEdicao = () => {
   .pessoa-info {
     flex-direction: column;
     align-items: flex-start;
-    min-width:300px ;
+    min-width: 300px;
   }
 
   .pessoa-actions {

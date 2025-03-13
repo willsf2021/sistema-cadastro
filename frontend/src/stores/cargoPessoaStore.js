@@ -1,21 +1,18 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
-
-const API_URL = 'http://localhost:8000/api';
+import cargoPessoaService from '@/services/cargoPessoaService';
 
 export const useCargoPessoaStore = defineStore('cargoPessoa', {
   state: () => ({
-    historico: [], 
-    loading: false, 
-    error: null, 
+    historico: [],
+    loading: false,
+    error: null,
   }),
   actions: {
-  
     async criarVinculo(vinculo) {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.post(`${API_URL}/cargo-pessoa`, vinculo);
+        const response = await cargoPessoaService.createCargoPessoa(vinculo);
         return response.data;
       } catch (error) {
         this.error = error.response?.data?.message || 'Erro ao criar vínculo';
@@ -25,12 +22,11 @@ export const useCargoPessoaStore = defineStore('cargoPessoa', {
       }
     },
 
-
     async atualizarVinculo(id, dadosAtualizados) {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.put(`${API_URL}/cargo-pessoa/${id}`, dadosAtualizados);
+        const response = await cargoPessoaService.updateCargoPessoa(id, dadosAtualizados);
         return response.data;
       } catch (error) {
         this.error = error.response?.data?.message || 'Erro ao atualizar vínculo';
@@ -40,12 +36,11 @@ export const useCargoPessoaStore = defineStore('cargoPessoa', {
       }
     },
 
-
     async excluirVinculo(id) {
       this.loading = true;
       this.error = null;
       try {
-        await axios.delete(`${API_URL}/cargo-pessoa/${id}`);
+        await cargoPessoaService.deleteCargoPessoa(id);
       } catch (error) {
         this.error = error.response?.data?.message || 'Erro ao excluir vínculo';
         throw error;
@@ -54,12 +49,11 @@ export const useCargoPessoaStore = defineStore('cargoPessoa', {
       }
     },
 
-
     async buscarHistorico(pessoaId) {
       this.loading = true;
       this.error = null;
       try {
-        const response = await axios.get(`${API_URL}/historico-cargo/${pessoaId}`);
+        const response = await cargoPessoaService.getHistoricoDeCargos(pessoaId);
         this.historico = response.data;
       } catch (error) {
         this.error = error.response?.data?.message || 'Erro ao buscar histórico';
