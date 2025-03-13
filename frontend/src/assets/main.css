@@ -8,6 +8,10 @@ body {
   font-family: 'Raleway', sans-serif;
 }
 
+ul li {
+  list-style: none;
+}
+
 button {
   background-color: transparent;
   border: none;

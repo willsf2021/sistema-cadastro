@@ -8,10 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 class Pessoa extends Model
 {
     use HasFactory;
+
     protected $fillable = ['nome', 'email'];
-    // Relacionamento com HistoricoCargo
-    public function historicoCargos()
+
+    public function cargos()
     {
-        return $this->hasMany(HistoricoCargo::class);
+        return $this->belongsToMany(Cargo::class, 'cargo_pessoa')
+                    ->withPivot('data_inicio', 'data_fim')
+                    ->withTimestamps();
     }
 }

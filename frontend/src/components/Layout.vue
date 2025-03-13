@@ -1,17 +1,22 @@
 <template>
     <div class="layout">
+        <!-- Menu Lateral (ou Superior em telas pequenas) -->
         <aside class="menu">
             <div class="profile-data">
-                <img src="" alt="">
+                <img src="" alt="Foto do perfil">
             </div>
-            <router-link to="/app/dashboard"><i class="bi bi-border-all"></i>Dashboard</router-link>
-            <router-link to="/app/pessoas"><i class="bi bi-people"></i>Pessoas</router-link>
-            <router-link to="/app/cargos"><i class="bi bi-briefcase-fill"></i>Cargos</router-link>
+            <div class="menu-links">
+                <router-link to="/app/dashboard"><i class="bi bi-border-all"></i>Dashboard</router-link>
+                <router-link to="/app/pessoas"><i class="bi bi-people"></i>Pessoas</router-link>
+                <router-link to="/app/cargos"><i class="bi bi-briefcase-fill"></i>Cargos</router-link>
+            </div>
             <button>
                 <i class="bi bi-box-arrow-left"></i>
                 Sair
             </button>
         </aside>
+
+        <!-- Conteúdo Principal -->
         <main class="content">
             <router-view />
         </main>
@@ -21,33 +26,48 @@
 <style scoped>
 .layout {
     display: flex;
+    flex-direction: column;
     height: 100vh;
+    position: relative;
 }
 
 .menu {
-    width: 360px;
+    width: 100%;
     background: #121C3E;
     color: white;
-    padding: 0px 24px;
+    padding: 16px 24px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.menu-links {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 button {
     background-color: #FF0000;
     color: white;
-    padding: 16px 28px;
-    font-size: 18px;
+    padding: 12px 20px;
+    font-size: 16px;
     border-radius: 14px;
     font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    column-gap: 12px;
+    column-gap: 8px;
+    border: none;
+    cursor: pointer;
 }
 
 button i {
-    font-size: 24px;
+    font-size: 20px;
 }
 
 .menu a {
@@ -55,16 +75,15 @@ button i {
     text-decoration: none;
     display: flex;
     align-items: center;
-    padding: 16px 28px;
+    padding: 12px 20px;
     border-radius: 14px;
-    font-size: 18px;
-    display: flex;
-    column-gap: 13px;
+    font-size: 16px;
+    column-gap: 8px;
     font-weight: 700;
 }
 
 .menu a i {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
 }
 
@@ -82,5 +101,52 @@ button i {
 
 .content {
     flex: 1;
+    background-color: #E3EDF9;
+    
+    overflow-y: auto;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .menu {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px;
+    }
+
+    .menu-links {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .menu a {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    button {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu a {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+
+    .menu a i {
+        font-size: 20px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+
+    button i {
+        font-size: 18px;
+    }
 }
 </style>
