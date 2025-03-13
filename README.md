@@ -15,6 +15,7 @@ Sistema de Cadastro é uma aplicação full-stack construída com **Laravel** no
 ---
 
 ## [ 📷 Screenshots do Projeto](/screenshots.md).
+## [ Jornada do Desenvolvimento | YouTube](https://youtu.be/X9byWdpYbPE).
 
 
 
