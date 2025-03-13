@@ -1,21 +1,40 @@
 <template>
-  <div>
-    <h1>Dashboard</h1>
-    <p>Bem-vindo ao sistema de gerenciamento de cargos e pessoas!</p>
-    <div v-if="loading">Carregando...</div>
-    <div v-else>
-      <p>Total de Cargos: {{ totalCargos }}</p>
-      <p>Total de Pessoas: {{ totalPessoas }}</p>
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">Dashboard</h1>
+    <p class="text-center mb-5">Bem-vindo ao sistema de gerenciamento de cargos e pessoas!</p>
+    
+    <!-- Loading Indicator -->
+    <div v-if="loading" class="text-center text-muted">Carregando...</div>
+
+    <!-- Data Summary -->
+    <div v-else class="row">
+      <div class="col-md-6 mb-3">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title">Total de Cargos</h5>
+            <p class="card-text display-4">{{ totalCargos }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <div class="card shadow-sm">
+          <div class="card-body text-center">
+            <h5 class="card-title">Total de Pessoas</h5>
+            <p class="card-text display-4">{{ totalPessoas }}</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Seção de gerenciamento de vínculos -->
-    <div class="vinculos-section">
-      <h2>Gerenciamento de Vínculos</h2>
+    <div class="vinculos-section mt-4 p-4 border rounded shadow-sm">
+      <h2 class="text-center mb-4">Gerenciamento de Vínculos</h2>
 
-      <!-- Selecione uma pessoa -->
-      <div class="form-group">
-        <label>Selecione uma Pessoa:</label>
-        <select v-model="selectedPessoa" @change="carregarHistorico">
+    
+      <div class="form-group mb-4">
+        <label for="selectPessoa">Selecione uma Pessoa:</label>
+        <select id="selectPessoa" v-model="selectedPessoa" @change="carregarHistorico" class="form-select">
           <option value="">Selecione uma pessoa</option>
           <option v-for="pessoa in pessoaStore.pessoas" :key="pessoa.id" :value="pessoa.id">
             {{ pessoa.nome }}
@@ -23,18 +42,20 @@
         </select>
       </div>
 
-      <!-- Botão para novo vínculo -->
-      <button @click="abrirModalNovoVinculo" :disabled="!selectedPessoa" class="btn-primary">
-        Novo Vínculo
-      </button>
+
+      <div class="d-flex justify-content-center mb-4">
+        <button @click="abrirModalNovoVinculo" :disabled="!selectedPessoa" class="btn btn-primary">
+          Novo Vínculo
+        </button>
+      </div>
 
       <!-- Histórico de cargos -->
-      <div v-if="cargoPessoaStore.loading">Carregando histórico...</div>
-      <div v-else-if="cargoPessoaStore.error" class="error">
+      <div v-if="cargoPessoaStore.loading" class="text-center">Carregando histórico...</div>
+      <div v-else-if="cargoPessoaStore.error" class="alert alert-danger">
         {{ cargoPessoaStore.error }}
       </div>
-      <table v-else class="historico-table">
-        <thead>
+      <table v-else class="table table-striped">
+        <thead class="table-dark">
           <tr>
             <th>Cargo</th>
             <th>Data Início</th>
@@ -48,8 +69,8 @@
             <td>{{ formatarData(vinculo.data_inicio) }}</td>
             <td>{{ formatarData(vinculo.data_fim) }}</td>
             <td>
-              <button @click="abrirModalEdicao(vinculo)">Editar</button>
-              <button @click="excluirVinculo(vinculo.id)">Excluir</button>
+              <button @click="abrirModalEdicao(vinculo)" class="btn btn-warning btn-sm">Editar</button>
+              <button @click="excluirVinculo(vinculo.id)" class="btn btn-danger btn-sm ms-2">Excluir</button>
             </td>
           </tr>
         </tbody>
@@ -57,37 +78,43 @@
     </div>
 
     <!-- Modal para novo/editar vínculo -->
-    <div v-if="showModal" class="modal">
-      <div class="modal-content">
-        <h3>{{ modalTitle }}</h3>
-
-        <form @submit.prevent="salvarVinculo">
-          <div class="form-group">
-            <label>Cargo:</label>
-            <select v-model="vinculoEditavel.cargo_id" required>
-              <option value="">Selecione um cargo</option>
-              <option v-for="cargo in cargoStore.cargos" :key="cargo.id" :value="cargo.id">
-                {{ cargo.nome }}
-              </option>
-            </select>
+    <div v-if="showModal" class="modal fade show" tabindex="-1" style="display: block;" aria-labelledby="modalLabel" aria-hidden="false">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalLabel">{{ modalTitle }}</h5>
+            <button type="button" class="btn-close" @click="fecharModal" aria-label="Close"></button>
           </div>
+          <div class="modal-body">
+            <form @submit.prevent="salvarVinculo">
+              <div class="mb-3">
+                <label for="cargoSelect" class="form-label">Cargo:</label>
+                <select id="cargoSelect" v-model="vinculoEditavel.cargo_id" required class="form-select">
+                  <option value="">Selecione um cargo</option>
+                  <option v-for="cargo in cargoStore.cargos" :key="cargo.id" :value="cargo.id">
+                    {{ cargo.nome }}
+                  </option>
+                </select>
+              </div>
 
-          <div class="form-group">
-            <label>Data Início:</label>
-            <input type="date" v-model="vinculoEditavel.data_inicio" required />
-          </div>
+              <div class="mb-3">
+                <label for="dataInicio" class="form-label">Data Início:</label>
+                <input type="date" id="dataInicio" v-model="vinculoEditavel.data_inicio" required class="form-control" />
+              </div>
 
-          <div class="form-group">
-            <label>Data Fim:</label>
-            <input type="date" v-model="vinculoEditavel.data_fim" />
-            <small>(Deixe em branco para cargo atual)</small>
-          </div>
+              <div class="mb-3">
+                <label for="dataFim" class="form-label">Data Fim:</label>
+                <input type="date" id="dataFim" v-model="vinculoEditavel.data_fim" class="form-control" />
+                <small class="form-text text-muted">Deixe em branco para cargo atual</small>
+              </div>
 
-          <div class="modal-actions">
-            <button type="button" @click="fecharModal">Cancelar</button>
-            <button type="submit">Salvar</button>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @click="fecharModal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>
@@ -118,7 +145,7 @@ const vinculoEditavel = ref({
   data_fim: null,
 });
 
-// Computed
+
 const modalTitle = computed(() => {
   return isEditMode.value ? 'Editar Vínculo' : 'Novo Vínculo';
 });
@@ -139,7 +166,7 @@ const abrirModalEdicao = (vinculo) => {
   isEditMode.value = true;
   vinculoEditavel.value = {
     ...vinculo,
-    data_inicio: formatarDataParaInput(vinculo.data_inicio), // Garante o formato YYYY-MM-DD
+    data_inicio: formatarDataParaInput(vinculo.data_inicio), 
     data_fim: vinculo.data_fim ? formatarDataParaInput(vinculo.data_fim) : null,
   };
   showModal.value = true;
@@ -151,12 +178,12 @@ const fecharModal = () => {
 
 const salvarVinculo = async () => {
   try {
-    // Garante que a data de início esteja no formato correto
+  
     const dadosParaEnviar = {
       ...vinculoEditavel.value,
       data_inicio: formatarDataParaAPI(vinculoEditavel.value.data_inicio),
       data_fim: vinculoEditavel.value.data_fim ? formatarDataParaAPI(vinculoEditavel.value.data_fim) : null,
-      pessoa_id: selectedPessoa.value, // Inclui o pessoa_id no JSON
+      pessoa_id: selectedPessoa.value, 
     };
 
     if (isEditMode.value) {
@@ -166,7 +193,7 @@ const salvarVinculo = async () => {
       const vinculoAtivo = cargoPessoaStore.historico.find((v) => !v.data_fim);
 
       if (vinculoAtivo) {
-        // Encerra o vínculo anterior
+       
         await cargoPessoaStore.atualizarVinculo(vinculoAtivo.id, {
           ...vinculoAtivo,
           data_fim: formatarDataParaAPI(new Date()),
@@ -188,7 +215,7 @@ const excluirVinculo = async (id) => {
   if (confirm('Tem certeza que deseja excluir este vínculo?')) {
     try {
       await cargoPessoaStore.excluirVinculo(id);
-      await carregarHistorico(); // Recarrega o histórico após a exclusão
+      await carregarHistorico(); 
     } catch (error) {
       console.error('Erro ao excluir vínculo:', error);
       alert('Erro ao excluir vínculo. Tente novamente.');
@@ -210,18 +237,18 @@ const nomeCargo = (cargoId) => {
 const formatarData = (data) => {
   if (!data) return '-';
   const dateObj = new Date(data);
-  return dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); // Usa UTC para evitar problemas de fuso horário
+  return dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 };
 
 const formatarDataParaInput = (data) => {
-  // Converte para o formato YYYY-MM-DD (usado no input type="date")
+
   if (!data) return '';
   const dateObj = new Date(data);
   return dateObj.toISOString().split('T')[0];
 };
 
 const formatarDataParaAPI = (data) => {
-  // Converte para o formato YYYY-MM-DD (usado na API)
+
   if (!data) return null;
   const dateObj = new Date(data);
   return dateObj.toISOString().split('T')[0];
@@ -240,71 +267,41 @@ onMounted(async () => {
 
 <style scoped>
 .vinculos-section {
-  margin-top: 2rem;
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-.form-group {
-  margin: 1rem 0;
-}
-
-.historico-table {
-  width: 100%;
-  margin-top: 1rem;
-  border-collapse: collapse;
-}
-
-.historico-table th,
-.historico-table td {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background-color: #f8f9fa;
 }
 
 .modal-content {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  min-width: 400px;
+  border-radius: 10px;
 }
 
-.modal-actions {
-  margin-top: 1rem;
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+.modal-header {
+  background-color: #007bff;
+  color: white;
 }
 
 .error {
   color: red;
-  margin-top: 1rem;
 }
 
 .btn-primary {
   background-color: #007bff;
   color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 .btn-primary:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  background-color: #cccccc;
+}
+
+.table {
+  margin-top: 2rem;
+  border-radius: 5px;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f2f2f2;
+}
+
+.card {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 </style>

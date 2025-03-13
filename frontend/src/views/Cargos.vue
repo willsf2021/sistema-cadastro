@@ -36,9 +36,9 @@
       Nenhum cargo encontrado.
     </div>
 
-    <!-- Paginação e Botão Gerenciar Cargos -->
+    
+    <!-- Paginação -->
     <div class="footer-fixo">
-      <!-- Paginação -->
       <nav v-if="cargos.length > itensPorPagina" class="d-flex justify-content-center mt-4">
         <ul class="pagination">
           <li class="page-item" :class="{ disabled: paginaAtual === 1 }">
@@ -130,7 +130,7 @@ let modalExclusao = null;
 
 // Paginação
 const paginaAtual = ref(1);
-const itensPorPagina = ref(4); // Ajuste conforme necessário
+const itensPorPagina = ref(4); 
 
 const cargosPaginados = computed(() => {
   const inicio = (paginaAtual.value - 1) * itensPorPagina.value;
@@ -231,7 +231,7 @@ const cancelarEdicao = () => {
   border-radius: 8px;
   width: 100%;
   max-width: 600px;
-  min-width: 600px; /* Ajustado para telas menores */
+  min-width: 600px; 
   display: flex;
   justify-content: space-between;
   align-items: center;

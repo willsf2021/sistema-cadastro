@@ -38,9 +38,9 @@
       Nenhuma pessoa encontrada.
     </div>
 
-    <!-- Paginação e Botão Gerenciar Pessoas -->
+  
+    <!-- Paginação -->
     <div class="footer-fixo">
-      <!-- Paginação -->
       <nav v-if="pessoas.length > itensPorPagina" class="d-flex justify-content-center mt-4">
         <ul class="pagination">
           <li class="page-item" :class="{ disabled: paginaAtual === 1 }">
@@ -130,14 +130,14 @@
           </div>
           <div class="modal-body">
             <div class="d-flex flex-column align-items-center">
-              <!-- Foto de Perfil -->
+          
               <img :src="pessoaSelecionada?.foto || 'https://placehold.co/150x150/add8e6/000000'" alt="Foto de Perfil" class="rounded-circle mb-3" style="width: 150px; height: 150px;" />
 
-              <!-- Nome e Email -->
+  
               <h4>{{ pessoaSelecionada?.nome }}</h4>
               <p class="text-muted">{{ pessoaSelecionada?.email }}</p>
 
-              <!-- Último Cargo -->
+    
               <div class="mt-3">
                 <strong>Último cargo: </strong>
                 <span>{{ obterUltimoCargo(pessoaSelecionada) }}</span>
@@ -169,11 +169,11 @@ const editando = ref(false);
 const pessoaSelecionada = ref(null);
 let modalGerenciamento = null;
 let modalExclusao = null;
-let modalDetalhes = null; // Novo modal de detalhes
+let modalDetalhes = null; 
 
 // Paginação
 const paginaAtual = ref(1);
-const itensPorPagina = ref(4); // Ajuste conforme necessário
+const itensPorPagina = ref(4); 
 
 const pessoasPaginadas = computed(() => {
   const inicio = (paginaAtual.value - 1) * itensPorPagina.value;
@@ -199,10 +199,17 @@ const irParaPagina = (pagina) => {
 const obterUltimoCargo = (pessoa) => {
   if (!pessoa?.cargos || pessoa.cargos.length === 0) return "Nenhum cargo vinculado";
 
-  // Ordena os cargos pela data de início
-  const cargosOrdenados = pessoa.cargos.sort((a, b) => new Date(b['data-inicio']) - new Date(a['data-inicio']));
+  const cargosAtivos = pessoa.cargos.filter((cargo) => cargo.data_fim === null);
 
-  // Retorna o nome do cargo mais recente
+  if (cargosAtivos.length > 0) {
+  
+    return cargosAtivos[0].nome;
+  }
+
+
+  const cargosOrdenados = pessoa.cargos.sort((a, b) => new Date(b.data_inicio) - new Date(a.data_inicio));
+
+
   return cargosOrdenados[0].nome;
 };
 
@@ -226,7 +233,7 @@ onMounted(async () => {
 
   modalGerenciamento = new Modal(document.getElementById('modalGerenciamento'));
   modalExclusao = new Modal(document.getElementById('modalExclusao'));
-  modalDetalhes = new Modal(document.getElementById('modalDetalhes')); // Inicializa o modal de detalhes
+  modalDetalhes = new Modal(document.getElementById('modalDetalhes')); 
 });
 
 const abrirModalGerenciamento = () => {
@@ -240,18 +247,18 @@ const abrirModalExclusao = (pessoa) => {
 
 const confirmarExclusao = async () => {
   if (pessoaSelecionada.value) {
-    // Verifica se a pessoa possui vínculos (cargos)
+
     if (pessoaSelecionada.value.cargos && pessoaSelecionada.value.cargos.length > 0) {
       const confirmacao = confirm(
         `Esta pessoa possui vínculo com o(s) cargo(s): ${pessoaSelecionada.value.cargos.map((cargo) => cargo.nome).join(', ')}. Deseja realmente excluir?`
       );
 
       if (!confirmacao) {
-        return; // Cancela a exclusão se o usuário não confirmar
+        return; 
       }
     }
 
-    // Prossegue com a exclusão
+   
     await pessoaStore.deletePessoa(pessoaSelecionada.value.id);
     await pessoaStore.fetchPessoas();
     pessoas.value = pessoaStore.pessoas;
@@ -296,7 +303,7 @@ const cancelarEdicao = () => {
 }
 
 .container-pessoas {
-  flex: 1; /* Faz a lista ocupar o espaço restante */
+  flex: 1; 
 }
 
 .pessoa-info {
@@ -305,7 +312,7 @@ const cancelarEdicao = () => {
   border-radius: 8px;
   width: 100%;
   max-width: 600px;
-  min-width: 600px; /* Ajustado para telas menores */
+  min-width: 600px; 
   display: flex;
   justify-content: space-between;
   align-items: center;

@@ -1,6 +1,6 @@
 <template>
     <div class="layout">
-        <!-- Menu Lateral (ou Superior em telas pequenas) -->
+        <!-- Menu Superior -->
         <aside class="menu">
             <div class="profile-data">
                 <img src="" alt="Foto do perfil">
@@ -87,7 +87,7 @@ button i {
     font-weight: 700;
 }
 
-/* Estilo para o link ativo */
+
 .menu .router-link-active {
     background-color: #FFC20E;
     color: black;

@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex justify-content-center align-items-center vh-100  position-relative">
-        <!-- Imagem de fundo -->
+
         <div class="position-absolute top-0 start-0 w-100 h-100"
             :style="{ background: 'url(' + imageUrl + ') no-repeat center/cover' }">
             <div class="background-overlay"></div>
@@ -55,7 +55,6 @@ export default {
     width: 100%;
     height: 100%;
     background-color: rgba(37, 61, 144, 0.85);
-    /* Cor #253D90 com transparência */
     z-index: 1;
 }
 
