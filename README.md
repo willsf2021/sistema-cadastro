@@ -98,7 +98,7 @@ Por padrão, o frontend estará disponível em `http://localhost:5173`.
 ## 🔧 Funcionalidades
 - **Cadastro de Pessoas**: Permite registrar novas pessoas com nome, e-mail e outros dados.
 - **Cadastro de Cargos**: Permite adicionar diferentes cargos que as pessoas podem ocupar.
-- **Relação de Cargos-Pessoas**: Permite associar uma pessoa a um ou mais cargos.
+- **Vinculação e Histórico de Cargos**: Permite cadastrar de Cargo com Data de Início, Armazenamento e Edição de Histórico de Cargo, Tela de Consulta de Pessoas com Último Cargo e Consulta de Histórico de Cargo de Pessoa Específica.
 
 ## 🐛 Bugs Conhecidos
 
@@ -110,8 +110,8 @@ Este projeto está licenciado sob a Licença MIT - consulte o arquivo LICENSE pa
 
 ## 📞 Contato
 
-**Seu Nome**: Seu Nome  
-**Email**: seuemail@dominio.com
+
+**Email**: willsf2015@hotmail.com
 
 ## 🚀 Boas práticas de desenvolvimento
 - **Backend**: Laravel, migrando dados, validações, e autenticação simples.
