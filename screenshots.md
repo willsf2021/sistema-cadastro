@@ -22,7 +22,7 @@ Aqui estão algumas capturas de tela do projeto para demonstrar sua funcionalida
 ![Detalhes da Pessoa](./screenshots/detalhesPessoa.png)
 
 ## 📌 Cargos
-![Tela de Cargos](./screenshots/Cargos.png)
+![Tela de Cargos](./screenshots/cargos.png)
 
 ## 📌 Gerenciamento de Cargos
 ![Gerenciamento de Cargos](./screenshots/gerenciarCargos.png)
