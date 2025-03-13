@@ -59,7 +59,15 @@ O arquivo `.env.example` já contém as informações necessárias para conectar
 cp .env.example .env
 ```
 
-#### 3.3. Rodar o Servidor Backend
+#### 3.3. Migrar as migrations para o Banco de Dados
+
+Para rodar o as Migrations no Banco de Dados, execute o seguinte comando:
+
+```bash
+php artisan migrate
+```
+
+#### 3.4. Rodar o Servidor Backend
 
 Para rodar o servidor Laravel localmente, execute o seguinte comando:
 
