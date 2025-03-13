@@ -186,8 +186,13 @@ const salvarVinculo = async () => {
 
 const excluirVinculo = async (id) => {
   if (confirm('Tem certeza que deseja excluir este vínculo?')) {
-    await cargoPessoaStore.excluirVinculo(id);
-    await carregarHistorico();
+    try {
+      await cargoPessoaStore.excluirVinculo(id);
+      await carregarHistorico(); // Recarrega o histórico após a exclusão
+    } catch (error) {
+      console.error('Erro ao excluir vínculo:', error);
+      alert('Erro ao excluir vínculo. Tente novamente.');
+    }
   }
 };
 
@@ -203,7 +208,9 @@ const nomeCargo = (cargoId) => {
 };
 
 const formatarData = (data) => {
-  return data ? new Date(data).toLocaleDateString('pt-BR') : '-';
+  if (!data) return '-';
+  const dateObj = new Date(data);
+  return dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); // Usa UTC para evitar problemas de fuso horário
 };
 
 const formatarDataParaInput = (data) => {
@@ -229,6 +236,7 @@ onMounted(async () => {
   loading.value = false;
 });
 </script>
+
 
 <style scoped>
 .vinculos-section {

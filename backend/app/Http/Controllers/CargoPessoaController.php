@@ -23,23 +23,20 @@ class CargoPessoaController extends Controller
         return $cargoPessoa;
     }
 
-    public function destroy($pessoa_id)
-    {
-      
-        $cargoPessoa = CargoPessoa::where('pessoa_id', $pessoa_id)->first();
-    
+    public function destroy($id)
+{
+    $cargoPessoa = CargoPessoa::find($id);
 
-        if (!$cargoPessoa) {
-            return response()->json([
-                'message' => 'Vínculo não encontrado para a pessoa informada.',
-            ], 404);
-        }
-
-        $cargoPessoa->delete();
-    
-      
-        return response()->noContent();
+    if (!$cargoPessoa) {
+        return response()->json([
+            'message' => 'Vínculo não encontrado.',
+        ], 404);
     }
+
+    $cargoPessoa->delete();
+
+    return response()->noContent();
+}
 
     public function historico($pessoa_id)
     {
