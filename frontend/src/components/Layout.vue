@@ -3,14 +3,14 @@
         <!-- Menu Superior -->
         <aside class="menu">
             <div class="profile-data">
-                <img src="" alt="Foto do perfil">
+                <img :src="profilePic" alt="Foto do perfil">
             </div>
             <div class="menu-links">
                 <router-link to="/app/dashboard"><i class="bi bi-border-all"></i>Dashboard</router-link>
                 <router-link to="/app/pessoas"><i class="bi bi-people"></i>Pessoas</router-link>
                 <router-link to="/app/cargos"><i class="bi bi-briefcase-fill"></i>Cargos</router-link>
             </div>
-            <button>
+            <button @click="logout">
                 <i class="bi bi-box-arrow-left"></i>
                 Sair
             </button>
@@ -22,7 +22,16 @@
         </main>
     </div>
 </template>
+<script setup>
+import profilePic from "@/assets/images/profilePic.png"
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
+
+const logout = () => {
+            router.push('/');
+        };
+</script>
 <style scoped>
 .layout {
     display: flex;
@@ -102,7 +111,7 @@ button i {
 .content {
     flex: 1;
     background-color: #E3EDF9;
-    
+
     overflow-y: auto;
 }
 
