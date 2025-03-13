@@ -1,7 +1,7 @@
 <template>
   <div class="container-pessoas-general container-fluid">
     <h1 class="text-center mb-4">Pessoas</h1>
-  
+
     <div class="text-center mt-4">
       <button class="btn btn-primary" @click="abrirModalGerenciamento">
         Gerenciar Pessoas
@@ -24,7 +24,7 @@
           <div>
             <strong>{{ pessoa.nome }}</strong>
             <div class="text-muted"><strong>Email: </strong>{{ pessoa.email }}</div>
-            <div class="text-muted"><strong>Último cargo: </strong>{{ "" }}</div>
+            <div class="text-muted"><strong>Último cargo: </strong>{{ obterUltimoCargo(pessoa) }}</div>
           </div>
           <div class="pessoa-actions mt-3 mt-md-0">
             <i class="bi bi-eye detalhes-icon" :style="{ backgroundColor: '#3F861E' }"></i>
@@ -119,8 +119,11 @@
         </div>
       </div>
     </div>
+    
   </div>
+  
 </template>
+
 <script setup>
 import { usePessoaStore } from '@/stores/pessoaStore';
 import { onMounted, ref, computed } from 'vue';
@@ -160,6 +163,17 @@ const proximaPagina = () => {
 
 const irParaPagina = (pagina) => {
   paginaAtual.value = pagina;
+};
+
+// Função para obter o último cargo da pessoa
+const obterUltimoCargo = (pessoa) => {
+  if (!pessoa.cargos || pessoa.cargos.length === 0) return "Nenhum cargo vinculado";
+
+  // Ordena os cargos pela data de vinculação (assumindo que há uma propriedade `data-inicio`)
+  const cargosOrdenados = pessoa.cargos.sort((a, b) => new Date(b.data-inicio) - new Date(a.data-inicio));
+
+  // Retorna o nome do cargo mais recente
+  return cargosOrdenados[0].nome;
 };
 
 onMounted(async () => {
@@ -231,6 +245,8 @@ const cancelarEdicao = () => {
   editando.value = false;
 };
 </script>
+
+
 
 <style>
 .container-pessoas {
