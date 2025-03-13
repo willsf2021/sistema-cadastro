@@ -27,7 +27,7 @@
             <div class="text-muted"><strong>Último cargo: </strong>{{ obterUltimoCargo(pessoa) }}</div>
           </div>
           <div class="pessoa-actions mt-3 mt-md-0">
-            <i class="bi bi-eye detalhes-icon" :style="{ backgroundColor: '#3F861E' }"></i>
+            <i class="bi bi-eye detalhes-icon" @click="abrirModalDetalhes(pessoa)" :style="{ backgroundColor: '#3F861E' }"></i>
             <i class="bi bi-gear-fill editar-icon" @click="editarPessoa(pessoa)" :style="{ backgroundColor: '#FF0000' }"></i>
           </div>
         </div>
@@ -119,9 +119,38 @@
         </div>
       </div>
     </div>
-    
+
+    <!-- Modal de Detalhes da Pessoa -->
+    <div class="modal fade" id="modalDetalhes" tabindex="-1" aria-labelledby="modalDetalhesLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalDetalhesLabel">Detalhes da Pessoa</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex flex-column align-items-center">
+              <!-- Foto de Perfil -->
+              <img :src="pessoaSelecionada?.foto || 'https://placehold.co/150x150/add8e6/000000'" alt="Foto de Perfil" class="rounded-circle mb-3" style="width: 150px; height: 150px;" />
+
+              <!-- Nome e Email -->
+              <h4>{{ pessoaSelecionada?.nome }}</h4>
+              <p class="text-muted">{{ pessoaSelecionada?.email }}</p>
+
+              <!-- Último Cargo -->
+              <div class="mt-3">
+                <strong>Último cargo: </strong>
+                <span>{{ obterUltimoCargo(pessoaSelecionada) }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  
 </template>
 
 <script setup>
@@ -140,6 +169,7 @@ const editando = ref(false);
 const pessoaSelecionada = ref(null);
 let modalGerenciamento = null;
 let modalExclusao = null;
+let modalDetalhes = null; // Novo modal de detalhes
 
 // Paginação
 const paginaAtual = ref(1);
@@ -167,13 +197,19 @@ const irParaPagina = (pagina) => {
 
 // Função para obter o último cargo da pessoa
 const obterUltimoCargo = (pessoa) => {
-  if (!pessoa.cargos || pessoa.cargos.length === 0) return "Nenhum cargo vinculado";
+  if (!pessoa?.cargos || pessoa.cargos.length === 0) return "Nenhum cargo vinculado";
 
-  // Ordena os cargos pela data de vinculação (assumindo que há uma propriedade `data-inicio`)
-  const cargosOrdenados = pessoa.cargos.sort((a, b) => new Date(b.data-inicio) - new Date(a.data-inicio));
+  // Ordena os cargos pela data de início
+  const cargosOrdenados = pessoa.cargos.sort((a, b) => new Date(b['data-inicio']) - new Date(a['data-inicio']));
 
   // Retorna o nome do cargo mais recente
   return cargosOrdenados[0].nome;
+};
+
+// Função para abrir o modal de detalhes
+const abrirModalDetalhes = (pessoa) => {
+  pessoaSelecionada.value = pessoa;
+  modalDetalhes.show();
 };
 
 onMounted(async () => {
@@ -190,6 +226,7 @@ onMounted(async () => {
 
   modalGerenciamento = new Modal(document.getElementById('modalGerenciamento'));
   modalExclusao = new Modal(document.getElementById('modalExclusao'));
+  modalDetalhes = new Modal(document.getElementById('modalDetalhes')); // Inicializa o modal de detalhes
 });
 
 const abrirModalGerenciamento = () => {
@@ -245,8 +282,6 @@ const cancelarEdicao = () => {
   editando.value = false;
 };
 </script>
-
-
 
 <style>
 .container-pessoas {
