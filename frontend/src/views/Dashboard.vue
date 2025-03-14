@@ -31,7 +31,6 @@
     <div class="vinculos-section mt-4 p-4 border rounded shadow-sm">
       <h2 class="text-center mb-4">Gerenciamento de Vínculos</h2>
 
-
       <div class="form-group mb-4">
         <label for="selectPessoa">Selecione uma Pessoa:</label>
         <select id="selectPessoa" v-model="selectedPessoa" @change="carregarHistorico" class="form-select">
@@ -41,7 +40,6 @@
           </option>
         </select>
       </div>
-
 
       <div class="d-flex justify-content-center mb-4">
         <button @click="abrirModalNovoVinculo" :disabled="!selectedPessoa" class="btn btn-primary">
@@ -54,27 +52,44 @@
       <div v-else-if="cargoPessoaStore.error" class="alert alert-danger">
         {{ cargoPessoaStore.error }}
       </div>
-      <table v-else class="table table-striped">
-        <thead class="table-dark">
-          <tr>
-            <th>Cargo</th>
-            <th>Data Início</th>
-            <th>Data Fim</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="vinculo in cargoPessoaStore.historico" :key="vinculo.id">
-            <td>{{ nomeCargo(vinculo.cargo_id) }}</td>
-            <td>{{ formatarData(vinculo.data_inicio) }}</td>
-            <td>{{ formatarData(vinculo.data_fim) }}</td>
-            <td>
-              <button @click="abrirModalEdicao(vinculo)" class="btn btn-warning btn-sm">Editar</button>
-              <button @click="excluirVinculo(vinculo.id)" class="btn btn-danger btn-sm ms-2">Excluir</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-else>
+        <table class="table table-striped">
+          <thead class="table-dark">
+            <tr>
+              <th>Cargo</th>
+              <th>Data Início</th>
+              <th>Data Fim</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="vinculo in historicoPaginado" :key="vinculo.id">
+              <td>{{ nomeCargo(vinculo.cargo_id) }}</td>
+              <td>{{ formatarData(vinculo.data_inicio) }}</td>
+              <td>{{ formatarData(vinculo.data_fim) }}</td>
+              <td>
+                <button @click="abrirModalEdicao(vinculo)" class="btn btn-warning btn-sm">Editar</button>
+                <button @click="excluirVinculo(vinculo.id)" class="btn btn-danger btn-sm ms-2">Excluir</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Paginação -->
+        <nav v-if="totalPaginas > 1" aria-label="Paginação">
+          <ul class="pagination justify-content-center">
+            <li class="page-item" :class="{ disabled: paginaAtual === 1 }">
+              <a class="page-link" href="#" @click.prevent="paginaAnterior">Anterior</a>
+            </li>
+            <li class="page-item" v-for="pagina in totalPaginas" :key="pagina" :class="{ active: pagina === paginaAtual }">
+              <a class="page-link" href="#" @click.prevent="irParaPagina(pagina)">{{ pagina }}</a>
+            </li>
+            <li class="page-item" :class="{ disabled: paginaAtual === totalPaginas }">
+              <a class="page-link" href="#" @click.prevent="proximaPagina">Próxima</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
     </div>
 
     <!-- Modal para novo/editar vínculo -->
@@ -128,11 +143,9 @@ import { useCargoStore } from '@/stores/cargoStore';
 import { usePessoaStore } from '@/stores/pessoaStore';
 import { useCargoPessoaStore } from '@/stores/cargoPessoaStore';
 
-
 const cargoStore = useCargoStore();
 const pessoaStore = usePessoaStore();
 const cargoPessoaStore = useCargoPessoaStore();
-
 
 const totalCargos = ref(0);
 const totalPessoas = ref(0);
@@ -147,9 +160,23 @@ const vinculoEditavel = ref({
   data_fim: null,
 });
 
+// Paginação
+const paginaAtual = ref(1);
+const itensPorPagina = ref(10);
+
 // Computed
 const modalTitle = computed(() => {
   return isEditMode.value ? 'Editar Vínculo' : 'Novo Vínculo';
+});
+
+const historicoPaginado = computed(() => {
+  const inicio = (paginaAtual.value - 1) * itensPorPagina.value;
+  const fim = inicio + itensPorPagina.value;
+  return cargoPessoaStore.historico.slice(inicio, fim);
+});
+
+const totalPaginas = computed(() => {
+  return Math.ceil(cargoPessoaStore.historico.length / itensPorPagina.value);
 });
 
 // Métodos
@@ -196,32 +223,27 @@ const salvarVinculo = async () => {
       return;
     }
 
-
     if (fimNovo1 && fimNovo1 > dataAtual) {
       alert('Erro: A data de fim não pode ser no futuro.');
       return;
     }
-
 
     if (fimNovo1 && fimNovo1 < inicioNovo1) {
       alert('Erro: A data de fim não pode ser anterior à data de início.');
       return;
     }
 
-
     if (fimNovo1 && fimNovo1.getTime() === inicioNovo1.getTime()) {
       alert('Erro: A data de início e a data de fim não podem ser iguais.');
       return;
     }
-    
 
     const vinculoAtivo = cargoPessoaStore.historico.find((v) => !v.data_fim);
-    
+
     if (vinculoAtivo && !isEditMode.value) {
       const inicioAtivo = new Date(vinculoAtivo.data_inicio);
       const inicioNovo = new Date(dadosParaEnviar.data_inicio);
       const fimNovo = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
-
 
       const isNovoVinculoAnterior = fimNovo && fimNovo < inicioAtivo;
 
@@ -231,9 +253,7 @@ const salvarVinculo = async () => {
       }
     }
 
- 
     const sobreposicao = cargoPessoaStore.historico.some((vinculo) => {
-   
       if (isEditMode.value && vinculo.id === dadosParaEnviar.id) return false;
 
       const inicioExistente = new Date(vinculo.data_inicio);
@@ -241,10 +261,9 @@ const salvarVinculo = async () => {
       const inicioNovo = new Date(dadosParaEnviar.data_inicio);
       const fimNovo = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
 
-    
       return (
-        (fimNovo === null || inicioExistente <= fimNovo) && 
-        (fimExistente === null || inicioNovo <= fimExistente) 
+        (fimNovo === null || inicioExistente <= fimNovo) &&
+        (fimExistente === null || inicioNovo <= fimExistente)
       );
     });
 
@@ -257,7 +276,6 @@ const salvarVinculo = async () => {
       await cargoPessoaStore.atualizarVinculo(dadosParaEnviar.id, dadosParaEnviar);
       alert('Vínculo atualizado com sucesso!');
     } else {
-
       await cargoPessoaStore.criarVinculo(dadosParaEnviar);
       alert('Vínculo criado com sucesso!');
     }
@@ -273,12 +291,8 @@ const salvarVinculo = async () => {
 const excluirVinculo = async (id) => {
   if (confirm('Tem certeza que deseja excluir este vínculo?')) {
     try {
-
       await cargoPessoaStore.excluirVinculo(id);
-
-
       await carregarHistorico();
-
       fecharModal();
       alert('Vínculo excluído com sucesso!');
     } catch (error) {
@@ -292,11 +306,10 @@ const carregarHistorico = async () => {
   if (selectedPessoa.value) {
     try {
       await cargoPessoaStore.buscarHistorico(selectedPessoa.value);
-
-  
       cargoPessoaStore.historico.sort((a, b) => {
         return new Date(b.data_inicio) - new Date(a.data_inicio);
       });
+      paginaAtual.value = 1; // Resetar para a primeira página ao carregar novo histórico
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
       alert('Erro ao carregar histórico. Tente novamente.');
@@ -327,6 +340,19 @@ const formatarDataParaAPI = (data) => {
   return dateObj.toISOString().split('T')[0];
 };
 
+// Métodos de paginação
+const paginaAnterior = () => {
+  if (paginaAtual.value > 1) paginaAtual.value--;
+};
+
+const proximaPagina = () => {
+  if (paginaAtual.value < totalPaginas.value) paginaAtual.value++;
+};
+
+const irParaPagina = (pagina) => {
+  paginaAtual.value = pagina;
+};
+
 // Lifecycle
 onMounted(async () => {
   try {
@@ -347,7 +373,6 @@ onUnmounted(() => {
   selectedPessoa.value = null;
 });
 </script>
-
 
 <style scoped>
 .vinculos-section {
