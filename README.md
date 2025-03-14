@@ -175,4 +175,4 @@ Este projeto está licenciado sob a Licença MIT - consulte o arquivo LICENSE pa
 ## 🚀 Boas práticas de desenvolvimento
 
 - **Backend**: Laravel, migrations, validações e autenticação simples.
-- **Frontend**: Vue.js com gerenciamento de estado via Vuex (caso esteja implementado).
+- **Frontend**: Vue.js com gerenciamento de estado via Pinia
