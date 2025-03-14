@@ -2,7 +2,7 @@
   <div class="container mt-5">
     <h1 class="text-center mb-4">Dashboard</h1>
     <p class="text-center mb-5">Bem-vindo ao sistema de gerenciamento de cargos e pessoas!</p>
-    
+
     <!-- Loading Indicator -->
     <div v-if="loading" class="text-center text-muted">Carregando...</div>
 
@@ -31,7 +31,7 @@
     <div class="vinculos-section mt-4 p-4 border rounded shadow-sm">
       <h2 class="text-center mb-4">Gerenciamento de Vínculos</h2>
 
-    
+
       <div class="form-group mb-4">
         <label for="selectPessoa">Selecione uma Pessoa:</label>
         <select id="selectPessoa" v-model="selectedPessoa" @change="carregarHistorico" class="form-select">
@@ -78,7 +78,8 @@
     </div>
 
     <!-- Modal para novo/editar vínculo -->
-    <div v-if="showModal" class="modal fade show" tabindex="-1" style="display: block;" aria-labelledby="modalLabel" aria-hidden="false">
+    <div v-if="showModal" class="modal fade show" tabindex="-1" style="display: block;" aria-labelledby="modalLabel"
+      aria-hidden="false">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -99,7 +100,8 @@
 
               <div class="mb-3">
                 <label for="dataInicio" class="form-label">Data Início:</label>
-                <input type="date" id="dataInicio" v-model="vinculoEditavel.data_inicio" required class="form-control" />
+                <input type="date" id="dataInicio" v-model="vinculoEditavel.data_inicio" required
+                  class="form-control" />
               </div>
 
               <div class="mb-3">
@@ -121,17 +123,17 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useCargoStore } from '@/stores/cargoStore';
 import { usePessoaStore } from '@/stores/pessoaStore';
 import { useCargoPessoaStore } from '@/stores/cargoPessoaStore';
-import { onMounted, ref, computed } from 'vue';
 
-// Stores
+
 const cargoStore = useCargoStore();
 const pessoaStore = usePessoaStore();
 const cargoPessoaStore = useCargoPessoaStore();
 
-// Estados
+
 const totalCargos = ref(0);
 const totalPessoas = ref(0);
 const loading = ref(true);
@@ -156,7 +158,7 @@ const abrirModalNovoVinculo = () => {
   vinculoEditavel.value = {
     id: null,
     cargo_id: null,
-    data_inicio: formatarDataParaInput(new Date()), // Data atual no formato YYYY-MM-DD
+    data_inicio: formatarDataParaInput(new Date()),
     data_fim: null,
   };
   showModal.value = true;
@@ -166,7 +168,7 @@ const abrirModalEdicao = (vinculo) => {
   isEditMode.value = true;
   vinculoEditavel.value = {
     ...vinculo,
-    data_inicio: formatarDataParaInput(vinculo.data_inicio), 
+    data_inicio: formatarDataParaInput(vinculo.data_inicio),
     data_fim: vinculo.data_fim ? formatarDataParaInput(vinculo.data_fim) : null,
   };
   showModal.value = true;
@@ -177,45 +179,112 @@ const fecharModal = () => {
 };
 
 const salvarVinculo = async () => {
+  const dataAtual = new Date();
+  const inicioNovo1 = new Date(dadosParaEnviar.data_inicio);
+  const fimNovo1 = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
   try {
-  
     const dadosParaEnviar = {
       ...vinculoEditavel.value,
       data_inicio: formatarDataParaAPI(vinculoEditavel.value.data_inicio),
       data_fim: vinculoEditavel.value.data_fim ? formatarDataParaAPI(vinculoEditavel.value.data_fim) : null,
-      pessoa_id: selectedPessoa.value, 
+      pessoa_id: selectedPessoa.value,
     };
+
+
+    if (inicioNovo1 > dataAtual) {
+      alert('Erro: A data de início não pode ser no futuro.');
+      return;
+    }
+
+
+    if (fimNovo1 && fimNovo1 > dataAtual) {
+      alert('Erro: A data de fim não pode ser no futuro.');
+      return;
+    }
+
+
+    if (fimNovo1 && fimNovo1 < inicioNovo1) {
+      alert('Erro: A data de fim não pode ser anterior à data de início.');
+      return;
+    }
+
+
+    if (fimNovo1 && fimNovo1.getTime() === inicioNovo1.getTime()) {
+      alert('Erro: A data de início e a data de fim não podem ser iguais.');
+      return;
+    }
+    
+
+    const vinculoAtivo = cargoPessoaStore.historico.find((v) => !v.data_fim);
+    
+    if (vinculoAtivo && !isEditMode.value) {
+      const inicioAtivo = new Date(vinculoAtivo.data_inicio);
+      const inicioNovo = new Date(dadosParaEnviar.data_inicio);
+      const fimNovo = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
+
+
+  
+      const isNovoVinculoAnterior = fimNovo && fimNovo < inicioAtivo;
+
+      if (!isNovoVinculoAnterior) {
+        alert('Erro: Há um vínculo ativo sem data fim. Encerre o vínculo atual antes de criar um novo.');
+        return;
+      }
+    }
+
+
+    const sobreposicao = cargoPessoaStore.historico.some((vinculo) => {
+
+      if (isEditMode.value && vinculo.id === dadosParaEnviar.id) return false;
+
+      const inicioExistente = new Date(vinculo.data_inicio);
+      const fimExistente = vinculo.data_fim ? new Date(vinculo.data_fim) : null;
+      const inicioNovo = new Date(dadosParaEnviar.data_inicio);
+      const fimNovo = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
+
+
+      return (
+        (fimNovo === null || inicioExistente <= fimNovo) && 
+        (fimExistente === null || inicioNovo <= fimExistente) 
+      );
+    });
+
+    if (sobreposicao) {
+      alert('Erro: Há sobreposição de datas com outro vínculo existente.');
+      return;
+    }
 
     if (isEditMode.value) {
       await cargoPessoaStore.atualizarVinculo(dadosParaEnviar.id, dadosParaEnviar);
+      alert('Vínculo atualizado com sucesso!');
     } else {
-      // Verifica se já existe um cargo ativo
-      const vinculoAtivo = cargoPessoaStore.historico.find((v) => !v.data_fim);
-
-      if (vinculoAtivo) {
-       
-        await cargoPessoaStore.atualizarVinculo(vinculoAtivo.id, {
-          ...vinculoAtivo,
-          data_fim: formatarDataParaAPI(new Date()),
-        });
-      }
-
       // Cria o novo vínculo
       await cargoPessoaStore.criarVinculo(dadosParaEnviar);
+      alert('Vínculo criado com sucesso!');
     }
 
     await carregarHistorico();
     fecharModal();
   } catch (error) {
     console.error('Erro ao salvar vínculo:', error);
+    alert('Erro ao salvar vínculo. Verifique os dados e tente novamente.');
   }
 };
 
 const excluirVinculo = async (id) => {
   if (confirm('Tem certeza que deseja excluir este vínculo?')) {
     try {
+  
       await cargoPessoaStore.excluirVinculo(id);
-      await carregarHistorico(); 
+
+ 
+      await carregarHistorico();
+
+ 
+      fecharModal();
+
+
+      alert('Vínculo excluído com sucesso!');
     } catch (error) {
       console.error('Erro ao excluir vínculo:', error);
       alert('Erro ao excluir vínculo. Tente novamente.');
@@ -225,7 +294,17 @@ const excluirVinculo = async (id) => {
 
 const carregarHistorico = async () => {
   if (selectedPessoa.value) {
-    await cargoPessoaStore.buscarHistorico(selectedPessoa.value);
+    try {
+      await cargoPessoaStore.buscarHistorico(selectedPessoa.value);
+
+
+      cargoPessoaStore.historico.sort((a, b) => {
+        return new Date(b.data_inicio) - new Date(a.data_inicio);
+      });
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+      alert('Erro ao carregar histórico. Tente novamente.');
+    }
   }
 };
 
@@ -241,14 +320,12 @@ const formatarData = (data) => {
 };
 
 const formatarDataParaInput = (data) => {
-
   if (!data) return '';
   const dateObj = new Date(data);
   return dateObj.toISOString().split('T')[0];
 };
 
 const formatarDataParaAPI = (data) => {
-
   if (!data) return null;
   const dateObj = new Date(data);
   return dateObj.toISOString().split('T')[0];
@@ -256,11 +333,22 @@ const formatarDataParaAPI = (data) => {
 
 // Lifecycle
 onMounted(async () => {
-  await cargoStore.fetchCargos();
-  await pessoaStore.fetchPessoas();
-  totalCargos.value = cargoStore.cargos.length;
-  totalPessoas.value = pessoaStore.pessoas.length;
-  loading.value = false;
+  try {
+    await cargoStore.fetchCargos();
+    await pessoaStore.fetchPessoas();
+    totalCargos.value = cargoStore.cargos.length;
+    totalPessoas.value = pessoaStore.pessoas.length;
+  } catch (error) {
+    console.error('Erro ao carregar dados:', error);
+    alert('Erro ao carregar dados. Tente novamente.');
+  } finally {
+    loading.value = false;
+  }
+});
+
+onUnmounted(() => {
+  cargoPessoaStore.historico = []; 
+  selectedPessoa.value = null; 
 });
 </script>
 
