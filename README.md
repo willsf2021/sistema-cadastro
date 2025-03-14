@@ -1,6 +1,6 @@
 # 🚀 Sistema de Cadastro - Laravel + Vue.js
 
-Sistema de Cadastro é uma aplicação full-stack construída com **Laravel** no backend e **Vue.js** no frontend, utilizando **Vite** para o processo de build e hot-reloading. O projeto foi desenvolvido como um teste para a vaga de desenvolvimento da **ABE3 Software** e permite o cadastro, gerenciamento e visualização de pessoas, cargos e relações entre cargos e pessoas, com uma interface moderna e responsiva.
+Sistema de Cadastro é uma aplicação full-stack construída com **Laravel** no backend e **Vue.js** no frontend, utilizando **Vite** para o processo de build e hot-reloading. O projeto foi desenvolvido como um teste para a vaga de desenvolvimento da **ABE3 Software Group** e permite o cadastro, gerenciamento e visualização de pessoas, cargos e relações entre cargos e pessoas, com uma interface moderna e responsiva.
 
 ---
 
