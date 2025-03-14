@@ -147,7 +147,7 @@ const vinculoEditavel = ref({
   data_fim: null,
 });
 
-
+// Computed
 const modalTitle = computed(() => {
   return isEditMode.value ? 'Editar Vínculo' : 'Novo Vínculo';
 });
@@ -179,9 +179,6 @@ const fecharModal = () => {
 };
 
 const salvarVinculo = async () => {
-  const dataAtual = new Date();
-  const inicioNovo1 = new Date(dadosParaEnviar.data_inicio);
-  const fimNovo1 = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
   try {
     const dadosParaEnviar = {
       ...vinculoEditavel.value,
@@ -190,6 +187,9 @@ const salvarVinculo = async () => {
       pessoa_id: selectedPessoa.value,
     };
 
+    const dataAtual = new Date();
+    const inicioNovo1 = new Date(dadosParaEnviar.data_inicio);
+    const fimNovo1 = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
 
     if (inicioNovo1 > dataAtual) {
       alert('Erro: A data de início não pode ser no futuro.');
@@ -223,7 +223,6 @@ const salvarVinculo = async () => {
       const fimNovo = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
 
 
-  
       const isNovoVinculoAnterior = fimNovo && fimNovo < inicioAtivo;
 
       if (!isNovoVinculoAnterior) {
@@ -232,9 +231,9 @@ const salvarVinculo = async () => {
       }
     }
 
-
+ 
     const sobreposicao = cargoPessoaStore.historico.some((vinculo) => {
-
+   
       if (isEditMode.value && vinculo.id === dadosParaEnviar.id) return false;
 
       const inicioExistente = new Date(vinculo.data_inicio);
@@ -242,7 +241,7 @@ const salvarVinculo = async () => {
       const inicioNovo = new Date(dadosParaEnviar.data_inicio);
       const fimNovo = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
 
-
+    
       return (
         (fimNovo === null || inicioExistente <= fimNovo) && 
         (fimExistente === null || inicioNovo <= fimExistente) 
@@ -258,7 +257,7 @@ const salvarVinculo = async () => {
       await cargoPessoaStore.atualizarVinculo(dadosParaEnviar.id, dadosParaEnviar);
       alert('Vínculo atualizado com sucesso!');
     } else {
-      // Cria o novo vínculo
+
       await cargoPessoaStore.criarVinculo(dadosParaEnviar);
       alert('Vínculo criado com sucesso!');
     }
@@ -274,16 +273,13 @@ const salvarVinculo = async () => {
 const excluirVinculo = async (id) => {
   if (confirm('Tem certeza que deseja excluir este vínculo?')) {
     try {
-  
+
       await cargoPessoaStore.excluirVinculo(id);
 
- 
+
       await carregarHistorico();
 
- 
       fecharModal();
-
-
       alert('Vínculo excluído com sucesso!');
     } catch (error) {
       console.error('Erro ao excluir vínculo:', error);
@@ -297,7 +293,7 @@ const carregarHistorico = async () => {
     try {
       await cargoPessoaStore.buscarHistorico(selectedPessoa.value);
 
-
+  
       cargoPessoaStore.historico.sort((a, b) => {
         return new Date(b.data_inicio) - new Date(a.data_inicio);
       });
@@ -347,8 +343,8 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  cargoPessoaStore.historico = []; 
-  selectedPessoa.value = null; 
+  cargoPessoaStore.historico = [];
+  selectedPessoa.value = null;
 });
 </script>
 

@@ -19,7 +19,8 @@
 
     <!-- Lista de Pessoas -->
     <ul v-if="!loading && pessoas.length" class="list-group mb-5 container-pessoas">
-      <li v-for="pessoa in pessoasPaginadas" :key="pessoa.id" class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3">
+      <li v-for="pessoa in pessoasPaginadas" :key="pessoa.id"
+        class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3">
         <div class="pessoa-info w-100 w-md-auto">
           <div>
             <strong>{{ pessoa.nome }}</strong>
@@ -27,8 +28,10 @@
             <div class="text-muted"><strong>Último cargo: </strong>{{ obterUltimoCargo(pessoa) }}</div>
           </div>
           <div class="pessoa-actions mt-3 mt-md-0">
-            <i class="bi bi-eye detalhes-icon" @click="abrirModalDetalhes(pessoa)" :style="{ backgroundColor: '#3F861E' }"></i>
-            <i class="bi bi-gear-fill editar-icon" @click="editarPessoa(pessoa)" :style="{ backgroundColor: '#FF0000' }"></i>
+            <i class="bi bi-eye detalhes-icon" @click="abrirModalDetalhes(pessoa)"
+              :style="{ backgroundColor: '#3F861E' }"></i>
+            <i class="bi bi-gear-fill editar-icon" @click="editarPessoa(pessoa)"
+              :style="{ backgroundColor: '#FF0000' }"></i>
           </div>
         </div>
       </li>
@@ -38,7 +41,7 @@
       Nenhuma pessoa encontrada.
     </div>
 
-  
+
     <!-- Paginação -->
     <div class="footer-fixo">
       <nav v-if="pessoas.length > itensPorPagina" class="d-flex justify-content-center mt-4">
@@ -46,7 +49,8 @@
           <li class="page-item" :class="{ disabled: paginaAtual === 1 }">
             <a class="page-link" href="#" @click.prevent="paginaAnterior">Anterior</a>
           </li>
-          <li class="page-item" v-for="pagina in totalPaginas" :key="pagina" :class="{ active: pagina === paginaAtual }">
+          <li class="page-item" v-for="pagina in totalPaginas" :key="pagina"
+            :class="{ active: pagina === paginaAtual }">
             <a class="page-link" href="#" @click.prevent="irParaPagina(pagina)">{{ pagina }}</a>
           </li>
           <li class="page-item" :class="{ disabled: paginaAtual === totalPaginas }">
@@ -57,7 +61,8 @@
     </div>
 
     <!-- Modal de Gerenciamento -->
-    <div class="modal fade" id="modalGerenciamento" tabindex="-1" aria-labelledby="modalGerenciamentoLabel" aria-hidden="true">
+    <div class="modal fade" id="modalGerenciamento" tabindex="-1" aria-labelledby="modalGerenciamentoLabel"
+      aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -70,7 +75,8 @@
                 <input v-model="formPessoa.nome" class="form-control" placeholder="Nome da pessoa" required />
               </div>
               <div class="mb-3">
-                <input v-model="formPessoa.email" type="email" class="form-control" placeholder="E-mail da pessoa" required />
+                <input v-model="formPessoa.email" type="email" class="form-control" placeholder="E-mail da pessoa"
+                  required />
               </div>
               <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 <button type="submit" class="btn btn-success me-md-2">
@@ -81,7 +87,8 @@
             </form>
 
             <ul class="list-group">
-              <li v-for="pessoa in pessoas" :key="pessoa.id" class="list-group-item d-flex justify-content-between align-items-center">
+              <li v-for="pessoa in pessoas" :key="pessoa.id"
+                class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                   <strong>{{ pessoa.nome }}</strong>
                   <div class="text-muted">{{ pessoa.email }}</div>
@@ -103,7 +110,8 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p v-if="!pessoaSelecionada?.cargos?.length">Deseja realmente excluir a pessoa "{{ pessoaSelecionada?.nome }}"?</p>
+            <p v-if="!pessoaSelecionada?.cargos?.length">Deseja realmente excluir a pessoa "{{ pessoaSelecionada?.nome
+              }}"?</p>
             <div v-else>
               <p>Esta pessoa possui vínculo com o(s) cargo(s):</p>
               <ul>
@@ -130,14 +138,15 @@
           </div>
           <div class="modal-body">
             <div class="d-flex flex-column align-items-center">
-          
-              <img :src="pessoaSelecionada?.foto || 'https://placehold.co/150x150/add8e6/000000'" alt="Foto de Perfil" class="rounded-circle mb-3" style="width: 150px; height: 150px;" />
 
-  
+              <img :src="pessoaSelecionada?.foto || 'https://placehold.co/150x150/add8e6/000000'" alt="Foto de Perfil"
+                class="rounded-circle mb-3" style="width: 150px; height: 150px;" />
+
+
               <h4>{{ pessoaSelecionada?.nome }}</h4>
               <p class="text-muted">{{ pessoaSelecionada?.email }}</p>
 
-    
+
               <div class="mt-3">
                 <strong>Último cargo: </strong>
                 <span>{{ obterUltimoCargo(pessoaSelecionada) }}</span>
@@ -155,7 +164,7 @@
 
 <script setup>
 import { usePessoaStore } from '@/stores/pessoaStore';
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, onUnmounted } from 'vue';
 import { Modal } from 'bootstrap';
 
 const pessoaStore = usePessoaStore();
@@ -169,11 +178,11 @@ const editando = ref(false);
 const pessoaSelecionada = ref(null);
 let modalGerenciamento = null;
 let modalExclusao = null;
-let modalDetalhes = null; 
+let modalDetalhes = null;
 
 // Paginação
 const paginaAtual = ref(1);
-const itensPorPagina = ref(4); 
+const itensPorPagina = ref(4);
 
 const pessoasPaginadas = computed(() => {
   const inicio = (paginaAtual.value - 1) * itensPorPagina.value;
@@ -195,22 +204,35 @@ const irParaPagina = (pagina) => {
   paginaAtual.value = pagina;
 };
 
-// Função para obter o último cargo da pessoa
+
 const obterUltimoCargo = (pessoa) => {
-  if (!pessoa?.cargos || pessoa.cargos.length === 0) return "Nenhum cargo vinculado";
 
-  const cargosAtivos = pessoa.cargos.filter((cargo) => cargo.data_fim === null);
-
-  if (cargosAtivos.length > 0) {
-  
-    return cargosAtivos[0].nome;
+  if (!pessoa?.cargos || !Array.isArray(pessoa.cargos) || pessoa.cargos.length === 0) {
+    return "Nenhum cargo vinculado";
   }
 
 
-  const cargosOrdenados = pessoa.cargos.sort((a, b) => new Date(b.data_inicio) - new Date(a.data_inicio));
+  const cargosAtivos = pessoa.cargos.filter((cargo) => {
+
+    return cargo?.pivot?.data_fim === null;
+  });
 
 
-  return cargosOrdenados[0].nome;
+  if (cargosAtivos.length > 0) {
+    return cargosAtivos[0]?.nome || "Cargo sem nome";
+  }
+
+
+  const cargosOrdenados = pessoa.cargos
+    .filter((cargo) => cargo?.pivot?.data_inicio) 
+    .sort((a, b) => {
+      const dataA = new Date(a.pivot.data_inicio);
+      const dataB = new Date(b.pivot.data_inicio);
+      return dataB - dataA; 
+    });
+
+
+  return cargosOrdenados[0]?.nome || "Cargo sem nome";
 };
 
 // Função para abrir o modal de detalhes
@@ -219,22 +241,6 @@ const abrirModalDetalhes = (pessoa) => {
   modalDetalhes.show();
 };
 
-onMounted(async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    await pessoaStore.fetchPessoas();
-    pessoas.value = pessoaStore.pessoas;
-  } catch (err) {
-    error.value = pessoaStore.error;
-  } finally {
-    loading.value = false;
-  }
-
-  modalGerenciamento = new Modal(document.getElementById('modalGerenciamento'));
-  modalExclusao = new Modal(document.getElementById('modalExclusao'));
-  modalDetalhes = new Modal(document.getElementById('modalDetalhes')); 
-});
 
 const abrirModalGerenciamento = () => {
   modalGerenciamento.show();
@@ -247,18 +253,18 @@ const abrirModalExclusao = (pessoa) => {
 
 const confirmarExclusao = async () => {
   if (pessoaSelecionada.value) {
-
+    
     if (pessoaSelecionada.value.cargos && pessoaSelecionada.value.cargos.length > 0) {
       const confirmacao = confirm(
         `Esta pessoa possui vínculo com o(s) cargo(s): ${pessoaSelecionada.value.cargos.map((cargo) => cargo.nome).join(', ')}. Deseja realmente excluir?`
       );
-
+      
       if (!confirmacao) {
-        return; 
+        return;
       }
     }
-
-   
+    
+    
     await pessoaStore.deletePessoa(pessoaSelecionada.value.id);
     await pessoaStore.fetchPessoas();
     pessoas.value = pessoaStore.pessoas;
@@ -288,6 +294,26 @@ const cancelarEdicao = () => {
   formPessoa.value = { nome: '', email: '' };
   editando.value = false;
 };
+// Lifecycle
+onMounted(async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    await pessoaStore.fetchPessoas();
+    pessoas.value = pessoaStore.pessoas;
+  } catch (err) {
+    error.value = pessoaStore.error;
+  } finally {
+    loading.value = false;
+  }
+
+  modalGerenciamento = new Modal(document.getElementById('modalGerenciamento'));
+  modalExclusao = new Modal(document.getElementById('modalExclusao'));
+  modalDetalhes = new Modal(document.getElementById('modalDetalhes'));
+});
+onUnmounted(() => {
+  pessoas.value = [];
+});
 </script>
 
 <style>
@@ -295,6 +321,7 @@ const cancelarEdicao = () => {
   display: flex;
   align-items: center;
 }
+
 .container-pessoas-general {
   padding: 0px;
   display: flex;
@@ -303,7 +330,7 @@ const cancelarEdicao = () => {
 }
 
 .container-pessoas {
-  flex: 1; 
+  flex: 1;
 }
 
 .pessoa-info {
@@ -312,7 +339,7 @@ const cancelarEdicao = () => {
   border-radius: 8px;
   width: 100%;
   max-width: 600px;
-  min-width: 600px; 
+  min-width: 600px;
   display: flex;
   justify-content: space-between;
   align-items: center;
