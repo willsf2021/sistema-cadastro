@@ -244,7 +244,7 @@ const confirmarExclusao = async () => {
 
 const { validarNomePessoa, validarEmail } = useValidations()
 
-// Exemplo de uso no formulário
+
 const validarFormularioPessoa = (pessoa) => {
   const erroNome = validarNomePessoa(pessoa.nome)
   const erroEmail = validarEmail(pessoa.email)
