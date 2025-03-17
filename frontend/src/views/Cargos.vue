@@ -133,7 +133,7 @@ const editando = ref(false);
 const cargoSelecionado = ref(null);
 const cargoVinculado = ref(false);
 
-// Paginação com composable
+// Paginação
 const itensPorPagina = ref(4);
 const {
   paginaAtual,
