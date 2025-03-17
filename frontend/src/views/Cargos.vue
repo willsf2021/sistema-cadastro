@@ -20,13 +20,15 @@
 
     <!-- Lista de Cargos -->
     <ul v-if="!loading && cargos.length" class="list-group mb-5 container-cargos">
-      <li v-for="cargo in cargosPaginados" :key="cargo.id" class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3">
+      <li v-for="cargo in cargosPaginados" :key="cargo.id"
+        class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3">
         <div class="cargo-info w-100 w-md-auto">
           <div>
             <strong>{{ cargo.nome }}</strong>
           </div>
           <div class="cargo-actions mt-3 mt-md-0">
-            <i class="bi bi-gear-fill editar-icon" @click="editarCargo(cargo)" :style="{ backgroundColor: '#FF0000' }"></i>
+            <i class="bi bi-gear-fill editar-icon" @click="editarCargo(cargo)"
+              :style="{ backgroundColor: '#FF0000' }"></i>
           </div>
         </div>
       </li>
@@ -36,7 +38,7 @@
       Nenhum cargo encontrado.
     </div>
 
-    
+
     <!-- Paginação -->
     <div class="footer-fixo">
       <nav v-if="cargos.length > itensPorPagina" class="d-flex justify-content-center mt-4">
@@ -44,7 +46,8 @@
           <li class="page-item" :class="{ disabled: paginaAtual === 1 }">
             <a class="page-link" href="#" @click.prevent="paginaAnterior">Anterior</a>
           </li>
-          <li class="page-item" v-for="pagina in totalPaginas" :key="pagina" :class="{ active: pagina === paginaAtual }">
+          <li class="page-item" v-for="pagina in totalPaginas" :key="pagina"
+            :class="{ active: pagina === paginaAtual }">
             <a class="page-link" href="#" @click.prevent="irParaPagina(pagina)">{{ pagina }}</a>
           </li>
           <li class="page-item" :class="{ disabled: paginaAtual === totalPaginas }">
@@ -55,7 +58,8 @@
     </div>
 
     <!-- Modal de Gerenciamento -->
-    <div class="modal fade" id="modalGerenciamento" tabindex="-1" aria-labelledby="modalGerenciamentoLabel" aria-hidden="true">
+    <div class="modal fade" id="modalGerenciamento" tabindex="-1" aria-labelledby="modalGerenciamentoLabel"
+      aria-hidden="true">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -76,7 +80,8 @@
             </form>
 
             <ul class="list-group">
-              <li v-for="cargo in cargos" :key="cargo.id" class="list-group-item d-flex justify-content-between align-items-center">
+              <li v-for="cargo in cargos" :key="cargo.id"
+                class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                   <strong>{{ cargo.nome }}</strong>
                 </div>
@@ -102,7 +107,8 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button v-if="!cargoVinculado" type="button" class="btn btn-danger" @click="confirmarExclusao">Excluir</button>
+            <button v-if="!cargoVinculado" type="button" class="btn btn-danger"
+              @click="confirmarExclusao">Excluir</button>
           </div>
         </div>
       </div>
@@ -114,6 +120,8 @@
 import { useCargoStore } from '@/stores/cargoStore';
 import { onMounted, ref, computed } from 'vue';
 import { Modal } from 'bootstrap';
+import { usePagination } from '@/composables/usePagination';
+import { useValidations } from '@/composables/useValidations'
 
 const cargoStore = useCargoStore();
 
@@ -122,35 +130,23 @@ const loading = ref(false);
 const error = ref(null);
 const formCargo = ref({ nome: '' });
 const editando = ref(false);
-
 const cargoSelecionado = ref(null);
 const cargoVinculado = ref(false);
+
+// Paginação com composable
+const itensPorPagina = ref(4);
+const {
+  paginaAtual,
+  totalPaginas,
+  itemsPaginados: cargosPaginados,
+  irParaPagina,
+  paginaAnterior,
+  proximaPagina
+} = usePagination(cargos, itensPorPagina);
+
+// Modal instances
 let modalGerenciamento = null;
 let modalExclusao = null;
-
-// Paginação
-const paginaAtual = ref(1);
-const itensPorPagina = ref(4); 
-
-const cargosPaginados = computed(() => {
-  const inicio = (paginaAtual.value - 1) * itensPorPagina.value;
-  const fim = inicio + itensPorPagina.value;
-  return cargos.value.slice(inicio, fim);
-});
-
-const totalPaginas = computed(() => Math.ceil(cargos.value.length / itensPorPagina.value));
-
-const paginaAnterior = () => {
-  if (paginaAtual.value > 1) paginaAtual.value--;
-};
-
-const proximaPagina = () => {
-  if (paginaAtual.value < totalPaginas.value) paginaAtual.value++;
-};
-
-const irParaPagina = (pagina) => {
-  paginaAtual.value = pagina;
-};
 
 onMounted(async () => {
   loading.value = true;
@@ -188,19 +184,38 @@ const confirmarExclusao = async () => {
 };
 
 const salvarCargo = async () => {
-  if (editando.value) {
-    await cargoStore.updateCargo(formCargo.value.id, { nome: formCargo.value.nome });
-  } else {
-    await cargoStore.addCargo({ nome: formCargo.value.nome });
+  const { validarNomeCargo } = useValidations()
+
+  const validarFormularioCargo = (cargo) => {
+    const erroNome = validarNomeCargo(cargo.nome)
+    if (erroNome) return erroNome
+    return null
   }
-  formCargo.value = { nome: '' };
-  editando.value = false;
-  await cargoStore.fetchCargos();
-  cargos.value = cargoStore.cargos;
+
+  try {
+    const erro = validarFormularioCargo(formCargo.value)
+    if (erro) {
+      alert(erro)
+      return
+    }
+    if (editando.value) {
+      await cargoStore.updateCargo(formCargo.value.id, { nome: formCargo.value.nome });
+    } else {
+      await cargoStore.addCargo({ nome: formCargo.value.nome });
+    }
+
+    formCargo.value = { nome: '' };
+    editando.value = false;
+    await cargoStore.fetchCargos();
+    cargos.value = cargoStore.cargos;
+  } catch (err) {
+    console.error('Erro ao salvar cargo:', err);
+    error.value = 'Erro ao salvar cargo. Tente novamente.';
+  }
 };
 
 const editarCargo = (cargo) => {
-  formCargo.value = { id: cargo.id, nome: cargo.nome };
+  formCargo.value = { ...cargo };
   editando.value = true;
   abrirModalGerenciamento();
 };
@@ -220,7 +235,7 @@ const cancelarEdicao = () => {
 }
 
 .container-cargos {
-  flex: 1; 
+  flex: 1;
   display: flex;
   align-items: center;
 }
@@ -231,7 +246,7 @@ const cancelarEdicao = () => {
   border-radius: 8px;
   width: 100%;
   max-width: 600px;
-  min-width: 600px; 
+  min-width: 600px;
   display: flex;
   justify-content: space-between;
   align-items: center;

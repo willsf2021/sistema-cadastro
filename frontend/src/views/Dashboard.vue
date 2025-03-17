@@ -81,7 +81,8 @@
             <li class="page-item" :class="{ disabled: paginaAtual === 1 }">
               <a class="page-link" href="#" @click.prevent="paginaAnterior">Anterior</a>
             </li>
-            <li class="page-item" v-for="pagina in totalPaginas" :key="pagina" :class="{ active: pagina === paginaAtual }">
+            <li class="page-item" v-for="pagina in totalPaginas" :key="pagina"
+              :class="{ active: pagina === paginaAtual }">
               <a class="page-link" href="#" @click.prevent="irParaPagina(pagina)">{{ pagina }}</a>
             </li>
             <li class="page-item" :class="{ disabled: paginaAtual === totalPaginas }">
@@ -93,12 +94,11 @@
     </div>
 
     <!-- Modal para novo/editar vínculo -->
-    <div v-if="showModal" class="modal fade show" tabindex="-1" style="display: block;" aria-labelledby="modalLabel"
-      aria-hidden="false">
+    <div class="modal fade" id="modalVinculo" tabindex="-1" aria-labelledby="modalVinculoLabel" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="modalLabel">{{ modalTitle }}</h5>
+            <h5 class="modal-title" id="modalVinculoLabel">{{ modalTitle }}</h5>
             <button type="button" class="btn-close" @click="fecharModal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -134,76 +134,91 @@
         </div>
       </div>
     </div>
+
+    <!-- Backdrop -->
+    <div v-if="showModal" class="modal-backdrop fade show"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useCargoStore } from '@/stores/cargoStore';
-import { usePessoaStore } from '@/stores/pessoaStore';
-import { useCargoPessoaStore } from '@/stores/cargoPessoaStore';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { Modal } from 'bootstrap'
+import { useCargoStore } from '@/stores/cargoStore'
+import { usePessoaStore } from '@/stores/pessoaStore'
+import { useCargoPessoaStore } from '@/stores/cargoPessoaStore'
+import { useDates } from '@/composables/useDates'
+import { usePagination } from '@/composables/usePagination'
+import { useValidations } from '@/composables/useValidations'
 
-const cargoStore = useCargoStore();
-const pessoaStore = usePessoaStore();
-const cargoPessoaStore = useCargoPessoaStore();
+const cargoStore = useCargoStore()
+const pessoaStore = usePessoaStore()
+const cargoPessoaStore = useCargoPessoaStore()
 
-const totalCargos = ref(0);
-const totalPessoas = ref(0);
-const loading = ref(true);
-const selectedPessoa = ref(null);
-const showModal = ref(false);
-const isEditMode = ref(false);
-const vinculoEditavel = ref({
-  id: null,
-  cargo_id: null,
-  data_inicio: '',
-  data_fim: null,
-});
+// Datas
+const { formatarData, formatarDataParaInput, formatarDataParaAPI } = useDates()
 
 // Paginação
-const paginaAtual = ref(1);
-const itensPorPagina = ref(10);
+const itensPorPagina = ref(10)
+const {
+  paginaAtual,
+  totalPaginas,
+  itemsPaginados: historicoPaginado,
+  irParaPagina,
+  paginaAnterior,
+  proximaPagina
+} = usePagination(
+  computed(() => cargoPessoaStore.historico),
+  itensPorPagina
+)
+
+// Validações
+const { validarDatas, validarSobreposicao, validarVinculoAtivo } = useValidations(computed(() => cargoPessoaStore.historico))
+
+
+const totalCargos = ref(0)
+const totalPessoas = ref(0)
+const loading = ref(true)
+const selectedPessoa = ref(null)
+const showModal = ref(false)
+const isEditMode = ref(false)
+const vinculoEditavel = ref(createEmptyVinculo())
+let modalInstance = null
 
 // Computed
-const modalTitle = computed(() => {
-  return isEditMode.value ? 'Editar Vínculo' : 'Novo Vínculo';
-});
-
-const historicoPaginado = computed(() => {
-  const inicio = (paginaAtual.value - 1) * itensPorPagina.value;
-  const fim = inicio + itensPorPagina.value;
-  return cargoPessoaStore.historico.slice(inicio, fim);
-});
-
-const totalPaginas = computed(() => {
-  return Math.ceil(cargoPessoaStore.historico.length / itensPorPagina.value);
-});
+const modalTitle = computed(() => isEditMode.value ? 'Editar Vínculo' : 'Novo Vínculo')
 
 // Métodos
-const abrirModalNovoVinculo = () => {
-  isEditMode.value = false;
-  vinculoEditavel.value = {
+function createEmptyVinculo() {
+  return {
     id: null,
     cargo_id: null,
     data_inicio: formatarDataParaInput(new Date()),
     data_fim: null,
-  };
-  showModal.value = true;
-};
+  }
+}
+
+const abrirModalNovoVinculo = () => {
+  isEditMode.value = false
+  vinculoEditavel.value = createEmptyVinculo()
+  showModal.value = true
+  modalInstance.show()
+}
 
 const abrirModalEdicao = (vinculo) => {
-  isEditMode.value = true;
+  isEditMode.value = true
   vinculoEditavel.value = {
     ...vinculo,
     data_inicio: formatarDataParaInput(vinculo.data_inicio),
     data_fim: vinculo.data_fim ? formatarDataParaInput(vinculo.data_fim) : null,
-  };
-  showModal.value = true;
-};
+  }
+  showModal.value = true
+  modalInstance.show()
+}
 
 const fecharModal = () => {
-  showModal.value = false;
-};
+  showModal.value = false
+  modalInstance.hide()
+}
 
 const salvarVinculo = async () => {
   try {
@@ -212,166 +227,116 @@ const salvarVinculo = async () => {
       data_inicio: formatarDataParaAPI(vinculoEditavel.value.data_inicio),
       data_fim: vinculoEditavel.value.data_fim ? formatarDataParaAPI(vinculoEditavel.value.data_fim) : null,
       pessoa_id: selectedPessoa.value,
-    };
-
-    const dataAtual = new Date();
-    const inicioNovo1 = new Date(dadosParaEnviar.data_inicio);
-    const fimNovo1 = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
-
-    if (inicioNovo1 > dataAtual) {
-      alert('Erro: A data de início não pode ser no futuro.');
-      return;
     }
 
-    if (fimNovo1 && fimNovo1 > dataAtual) {
-      alert('Erro: A data de fim não pode ser no futuro.');
-      return;
+    // Validações
+    const erroDatas = validarDatas(dadosParaEnviar.data_inicio, dadosParaEnviar.data_fim)
+    if (erroDatas) {
+      alert(`Erro: ${erroDatas}`)
+      return
     }
 
-    if (fimNovo1 && fimNovo1 < inicioNovo1) {
-      alert('Erro: A data de fim não pode ser anterior à data de início.');
-      return;
-    }
-
-    if (fimNovo1 && fimNovo1.getTime() === inicioNovo1.getTime()) {
-      alert('Erro: A data de início e a data de fim não podem ser iguais.');
-      return;
-    }
-
-    const vinculoAtivo = cargoPessoaStore.historico.find((v) => !v.data_fim);
-
-    if (vinculoAtivo && !isEditMode.value) {
-      const inicioAtivo = new Date(vinculoAtivo.data_inicio);
-      const inicioNovo = new Date(dadosParaEnviar.data_inicio);
-      const fimNovo = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
-
-      const isNovoVinculoAnterior = fimNovo && fimNovo < inicioAtivo;
-
-      if (!isNovoVinculoAnterior) {
-        alert('Erro: Há um vínculo ativo sem data fim. Encerre o vínculo atual antes de criar um novo.');
-        return;
+    if (!isEditMode.value) {
+      const erroVinculoAtivo = validarVinculoAtivo(
+        computed(() => cargoPessoaStore.historico),
+        dadosParaEnviar.data_fim
+      )
+      if (erroVinculoAtivo) {
+        alert(`Erro: ${erroVinculoAtivo}`)
+        return
       }
     }
 
-    const sobreposicao = cargoPessoaStore.historico.some((vinculo) => {
-      if (isEditMode.value && vinculo.id === dadosParaEnviar.id) return false;
-
-      const inicioExistente = new Date(vinculo.data_inicio);
-      const fimExistente = vinculo.data_fim ? new Date(vinculo.data_fim) : null;
-      const inicioNovo = new Date(dadosParaEnviar.data_inicio);
-      const fimNovo = dadosParaEnviar.data_fim ? new Date(dadosParaEnviar.data_fim) : null;
-
-      return (
-        (fimNovo === null || inicioExistente <= fimNovo) &&
-        (fimExistente === null || inicioNovo <= fimExistente)
-      );
-    });
-
-    if (sobreposicao) {
-      alert('Erro: Há sobreposição de datas com outro vínculo existente.');
-      return;
+    if (validarSobreposicao(dadosParaEnviar, isEditMode.value)) {
+      alert('Erro: Há sobreposição de datas com outro vínculo existente.')
+      return
     }
 
     if (isEditMode.value) {
-      await cargoPessoaStore.atualizarVinculo(dadosParaEnviar.id, dadosParaEnviar);
-      alert('Vínculo atualizado com sucesso!');
+      await cargoPessoaStore.atualizarVinculo(dadosParaEnviar.id, dadosParaEnviar)
     } else {
-      await cargoPessoaStore.criarVinculo(dadosParaEnviar);
-      alert('Vínculo criado com sucesso!');
+      await cargoPessoaStore.criarVinculo(dadosParaEnviar)
     }
 
-    await carregarHistorico();
-    fecharModal();
+    await carregarHistorico()
+    fecharModal()
+    alert(`Vínculo ${isEditMode.value ? 'atualizado' : 'criado'} com sucesso!`)
   } catch (error) {
-    console.error('Erro ao salvar vínculo:', error);
-    alert('Erro ao salvar vínculo. Verifique os dados e tente novamente.');
+    console.error('Erro ao salvar vínculo:', error)
+    alert('Erro ao salvar vínculo. Verifique os dados e tente novamente.')
   }
-};
+}
 
 const excluirVinculo = async (id) => {
   if (confirm('Tem certeza que deseja excluir este vínculo?')) {
     try {
-      await cargoPessoaStore.excluirVinculo(id);
-      await carregarHistorico();
-      fecharModal();
-      alert('Vínculo excluído com sucesso!');
+      await cargoPessoaStore.excluirVinculo(id)
+      await carregarHistorico()
+      alert('Vínculo excluído com sucesso!')
     } catch (error) {
-      console.error('Erro ao excluir vínculo:', error);
-      alert('Erro ao excluir vínculo. Tente novamente.');
+      console.error('Erro ao excluir vínculo:', error)
+      alert('Erro ao excluir vínculo. Tente novamente.')
     }
   }
-};
+}
 
 const carregarHistorico = async () => {
   if (selectedPessoa.value) {
     try {
-      await cargoPessoaStore.buscarHistorico(selectedPessoa.value);
-      cargoPessoaStore.historico.sort((a, b) => {
-        return new Date(b.data_inicio) - new Date(a.data_inicio);
-      });
-      paginaAtual.value = 1; // Resetar para a primeira página ao carregar novo histórico
+      await cargoPessoaStore.buscarHistorico(selectedPessoa.value)
+      cargoPessoaStore.historico.sort((a, b) => 
+        new Date(b.data_inicio) - new Date(a.data_inicio) 
+      )
+      paginaAtual.value = 1
     } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
-      alert('Erro ao carregar histórico. Tente novamente.');
+      console.error('Erro ao carregar histórico:', error)
+      alert('Erro ao carregar histórico. Tente novamente.')
     }
   }
-};
+}
 
 const nomeCargo = (cargoId) => {
-  const cargo = cargoStore.cargos.find((c) => c.id === cargoId);
-  return cargo ? cargo.nome : 'Cargo não encontrado';
-};
-
-const formatarData = (data) => {
-  if (!data) return '-';
-  const dateObj = new Date(data);
-  return dateObj.toLocaleDateString('pt-BR', { timeZone: 'UTC' });
-};
-
-const formatarDataParaInput = (data) => {
-  if (!data) return '';
-  const dateObj = new Date(data);
-  return dateObj.toISOString().split('T')[0];
-};
-
-const formatarDataParaAPI = (data) => {
-  if (!data) return null;
-  const dateObj = new Date(data);
-  return dateObj.toISOString().split('T')[0];
-};
-
-// Métodos de paginação
-const paginaAnterior = () => {
-  if (paginaAtual.value > 1) paginaAtual.value--;
-};
-
-const proximaPagina = () => {
-  if (paginaAtual.value < totalPaginas.value) paginaAtual.value++;
-};
-
-const irParaPagina = (pagina) => {
-  paginaAtual.value = pagina;
-};
+  return cargoStore.cargos.find(c => c.id === cargoId)?.nome || 'Cargo não encontrado'
+}
 
 // Lifecycle
 onMounted(async () => {
   try {
-    await cargoStore.fetchCargos();
-    await pessoaStore.fetchPessoas();
-    totalCargos.value = cargoStore.cargos.length;
-    totalPessoas.value = pessoaStore.pessoas.length;
+    await Promise.all([
+      cargoStore.fetchCargos(),
+      pessoaStore.fetchPessoas()
+    ])
+    totalCargos.value = cargoStore.cargos.length
+    totalPessoas.value = pessoaStore.pessoas.length
+
+
+    modalInstance = new Modal(document.getElementById('modalVinculo'), {
+      backdrop: true,
+      keyboard: true
+    })
+
+    const modalElement = document.getElementById('modalVinculo')
+    modalElement.addEventListener('hidden.bs.modal', () => {
+      showModal.value = false
+    })
+    modalElement.addEventListener('shown.bs.modal', () => {
+      showModal.value = true
+    })
   } catch (error) {
-    console.error('Erro ao carregar dados:', error);
-    alert('Erro ao carregar dados. Tente novamente.');
+    console.error('Erro ao carregar dados:', error)
+    alert('Erro ao carregar dados. Tente novamente.')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-});
+})
 
 onUnmounted(() => {
-  cargoPessoaStore.historico = [];
-  selectedPessoa.value = null;
-});
+  if (modalInstance) {
+    modalInstance.dispose()
+  }
+  cargoPessoaStore.historico = []
+  selectedPessoa.value = null
+})
 </script>
 
 <style scoped>
@@ -379,8 +344,19 @@ onUnmounted(() => {
   background-color: #f8f9fa;
 }
 
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
 .modal-content {
   border-radius: 10px;
+  z-index: 1050;
 }
 
 .modal-header {

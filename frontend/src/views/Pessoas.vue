@@ -111,7 +111,7 @@
           </div>
           <div class="modal-body">
             <p v-if="!pessoaSelecionada?.cargos?.length">Deseja realmente excluir a pessoa "{{ pessoaSelecionada?.nome
-              }}"?</p>
+            }}"?</p>
             <div v-else>
               <p>Esta pessoa possui vínculo com o(s) cargo(s):</p>
               <ul>
@@ -166,6 +166,8 @@
 import { usePessoaStore } from '@/stores/pessoaStore';
 import { onMounted, ref, computed, onUnmounted } from 'vue';
 import { Modal } from 'bootstrap';
+import { usePagination } from '@/composables/usePagination';
+import { useValidations } from '@/composables/useValidations'
 
 const pessoaStore = usePessoaStore();
 
@@ -174,73 +176,45 @@ const loading = ref(false);
 const error = ref(null);
 const formPessoa = ref({ nome: '', email: '' });
 const editando = ref(false);
-
 const pessoaSelecionada = ref(null);
+
+// Paginação
+const itensPorPagina = ref(4);
+const {
+  paginaAtual,
+  totalPaginas,
+  itemsPaginados: pessoasPaginadas,
+  irParaPagina,
+  paginaAnterior,
+  proximaPagina
+} = usePagination(pessoas, itensPorPagina);
+
+
 let modalGerenciamento = null;
 let modalExclusao = null;
 let modalDetalhes = null;
 
-// Paginação
-const paginaAtual = ref(1);
-const itensPorPagina = ref(4);
-
-const pessoasPaginadas = computed(() => {
-  const inicio = (paginaAtual.value - 1) * itensPorPagina.value;
-  const fim = inicio + itensPorPagina.value;
-  return pessoas.value.slice(inicio, fim);
-});
-
-const totalPaginas = computed(() => Math.ceil(pessoas.value.length / itensPorPagina.value));
-
-const paginaAnterior = () => {
-  if (paginaAtual.value > 1) paginaAtual.value--;
-};
-
-const proximaPagina = () => {
-  if (paginaAtual.value < totalPaginas.value) paginaAtual.value++;
-};
-
-const irParaPagina = (pagina) => {
-  paginaAtual.value = pagina;
-};
-
-
 const obterUltimoCargo = (pessoa) => {
-
   if (!pessoa?.cargos || !Array.isArray(pessoa.cargos) || pessoa.cargos.length === 0) {
     return "Nenhum cargo vinculado";
   }
 
-
-  const cargosAtivos = pessoa.cargos.filter((cargo) => {
-
-    return cargo?.pivot?.data_fim === null;
-  });
-
-
+  const cargosAtivos = pessoa.cargos.filter((cargo) => cargo?.pivot?.data_fim === null);
   if (cargosAtivos.length > 0) {
     return cargosAtivos[0]?.nome || "Cargo sem nome";
   }
 
-
   const cargosOrdenados = pessoa.cargos
-    .filter((cargo) => cargo?.pivot?.data_inicio) 
-    .sort((a, b) => {
-      const dataA = new Date(a.pivot.data_inicio);
-      const dataB = new Date(b.pivot.data_inicio);
-      return dataB - dataA; 
-    });
-
+    .filter((cargo) => cargo?.pivot?.data_inicio)
+    .sort((a, b) => new Date(b.pivot.data_inicio) - new Date(a.pivot.data_inicio));
 
   return cargosOrdenados[0]?.nome || "Cargo sem nome";
 };
 
-// Função para abrir o modal de detalhes
 const abrirModalDetalhes = (pessoa) => {
   pessoaSelecionada.value = pessoa;
   modalDetalhes.show();
 };
-
 
 const abrirModalGerenciamento = () => {
   modalGerenciamento.show();
@@ -253,18 +227,13 @@ const abrirModalExclusao = (pessoa) => {
 
 const confirmarExclusao = async () => {
   if (pessoaSelecionada.value) {
-    
-    if (pessoaSelecionada.value.cargos && pessoaSelecionada.value.cargos.length > 0) {
+    if (pessoaSelecionada.value.cargos?.length > 0) {
       const confirmacao = confirm(
         `Esta pessoa possui vínculo com o(s) cargo(s): ${pessoaSelecionada.value.cargos.map((cargo) => cargo.nome).join(', ')}. Deseja realmente excluir?`
       );
-      
-      if (!confirmacao) {
-        return;
-      }
+      if (!confirmacao) return;
     }
-    
-    
+
     await pessoaStore.deletePessoa(pessoaSelecionada.value.id);
     await pessoaStore.fetchPessoas();
     pessoas.value = pessoaStore.pessoas;
@@ -272,20 +241,45 @@ const confirmarExclusao = async () => {
   }
 };
 
+
+const { validarNomePessoa, validarEmail } = useValidations()
+
+// Exemplo de uso no formulário
+const validarFormularioPessoa = (pessoa) => {
+  const erroNome = validarNomePessoa(pessoa.nome)
+  const erroEmail = validarEmail(pessoa.email)
+
+  if (erroNome) return erroNome
+  if (erroEmail) return erroEmail
+  return null
+}
+
+
 const salvarPessoa = async () => {
-  if (editando.value) {
-    await pessoaStore.updatePessoa(formPessoa.value.id, { nome: formPessoa.value.nome, email: formPessoa.value.email });
-  } else {
-    await pessoaStore.addPessoa({ nome: formPessoa.value.nome, email: formPessoa.value.email });
+  const erro = validarFormularioPessoa(formPessoa.value)
+  if (erro) {
+    alert(erro)
+    return
   }
-  formPessoa.value = { nome: '', email: '' };
-  editando.value = false;
-  await pessoaStore.fetchPessoas();
-  pessoas.value = pessoaStore.pessoas;
+  try {
+    if (editando.value) {
+      await pessoaStore.updatePessoa(formPessoa.value.id, formPessoa.value);
+    } else {
+      await pessoaStore.addPessoa(formPessoa.value);
+    }
+
+    formPessoa.value = { nome: '', email: '' };
+    editando.value = false;
+    await pessoaStore.fetchPessoas();
+    pessoas.value = pessoaStore.pessoas;
+  } catch (err) {
+    console.error('Erro ao salvar pessoa:', err);
+    error.value = 'Erro ao salvar pessoa. Tente novamente.';
+  }
 };
 
 const editarPessoa = (pessoa) => {
-  formPessoa.value = { id: pessoa.id, nome: pessoa.nome, email: pessoa.email };
+  formPessoa.value = { ...pessoa };
   editando.value = true;
   abrirModalGerenciamento();
 };
@@ -294,15 +288,14 @@ const cancelarEdicao = () => {
   formPessoa.value = { nome: '', email: '' };
   editando.value = false;
 };
-// Lifecycle
+
 onMounted(async () => {
   loading.value = true;
-  error.value = null;
   try {
     await pessoaStore.fetchPessoas();
     pessoas.value = pessoaStore.pessoas;
   } catch (err) {
-    error.value = pessoaStore.error;
+    error.value = pessoaStore.error || 'Erro ao carregar pessoas';
   } finally {
     loading.value = false;
   }
@@ -311,6 +304,7 @@ onMounted(async () => {
   modalExclusao = new Modal(document.getElementById('modalExclusao'));
   modalDetalhes = new Modal(document.getElementById('modalDetalhes'));
 });
+
 onUnmounted(() => {
   pessoas.value = [];
 });
