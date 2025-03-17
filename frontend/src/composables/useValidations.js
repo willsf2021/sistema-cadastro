@@ -1,4 +1,4 @@
-// composables/useValidations.js
+
 export const useValidations = (historico) => {
 
   const validarNome = (valor, campo = 'Nome', min = 3, max = 50) => {
